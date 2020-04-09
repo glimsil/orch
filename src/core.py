@@ -68,9 +68,6 @@ class Core:
 		os.system(line)
 
 	def deploy_scale_service(self, service_info):
-		image = service_info['image']
-		if(service_info['version'] != None):
-			image += ':' + str(service_info['version'])
 		containers = self.list_services_by_name(service_info['name'])
 		containers_to_scale = service_info['min_replicas']
 		# checking if current number of container is greater than min and lesser than max
@@ -90,12 +87,79 @@ class Core:
 
 		# creating new containers
 		for i in range(containers_to_scale):
-			name = service_info['name'] + '_' + str(round(time.time() * 1000))
-			self.client.containers.run(image, detach=True, name = name, labels = labels, ports = ports) 
+			self.deploy_service_instance(service_info)
 		
 		# removing old ones
 		for old_container in containers:
 			old_container.remove(force=True)
+
+	def deploy_service_instance(self, service_info):
+		image = service_info['image']
+		if(service_info['version'] != None):
+			image += ':' + str(service_info['version'])
+		labels = {
+			'orch.service.name' : service_info['name'], 
+			'traefik.backend': service_info['name'], 
+			'traefik.port' : '80', 
+			'traefik.frontend.rule':'Host:localhost'
+			}
+		ports = {
+			str(service_info['port']) + '/tcp': None
+			}
+		name = service_info['name'] + '_' + str(round(time.time() * 1000))
+		self.client.containers.run(image, detach=True, name = name, labels = labels, ports = ports) 
+
+	def scale_service(self, service_name, scale_to):
+		if(self.service_manager.service_info_exists(service_name)):
+			service_info = self.service_manager.get_service_info(service_name)
+		else:
+			print('There is no service info for this service name.')
+			return
+		if(scale_to > service_info['max_replicas']):
+			scale_to = service_info['max_replicas']
+		elif(scale_to < service_info['min_replicas']):
+			scale_to = service_info['min_replicas']
+		containers = self.list_services_by_name(service_name)
+		if(len(containers) == scale_to):
+			print('Same number of replicas as requested. No changes on service.')
+		elif(len(containers) < scale_to):
+			print('Scaling up to ' + str(scale_to))
+			for i in range(scale_to - len(containers)):
+				self.scale_service_up(service_name, service_info)
+		else:
+			print('Scaling down to ' + str(scale_to))
+			for i in range(len(containers) - scale_to):
+				self.scale_service_down(service_name, service_info)
+	
+	def scale_service_up(self, service_name, service_info=None):
+		if(service_info == None):
+			if(self.service_manager.service_info_exists(service_name)):
+				service_info = self.service_manager.get_service_info(service_name)
+			else:
+				print('There is no service info for this service name.')
+				return
+		
+		containers = self.list_services_by_name(service_name)
+		if(service_info['max_replicas'] > len(containers)):
+			print('Scaling up ' + service_name)
+			self.deploy_service_instance(service_info)
+		else:
+			print('Service \'' + service_name + '\' exceeded the max replicas limit.')
+
+	def scale_service_down(self, service_name, service_info=None):
+		if(service_info == None):
+			if(self.service_manager.service_info_exists(service_name)):
+				service_info = self.service_manager.get_service_info(service_name)
+			else:
+				print('There is no service info for this service name.')
+				return
+		
+		containers = self.list_services_by_name(service_name)
+		if(service_info['min_replicas'] < len(containers)):
+			print('Scaling down ' + service_name)
+			containers[-1].remove(force=True)
+		else:
+			print('Service \'' + service_name + '\' exceeded the min replicas limit.')
 
 	def remove_service(self, service_name):
 		try:
@@ -109,6 +173,10 @@ class Core:
 		for container in containers:
 			container.remove(force=True)
 		self.service_manager.delete_service_info(service_name)
+
+	def count_services_by_name(self, service_name):
+		containers = self.list_services_by_name(service_name)
+		return len(containers)
 
 	def list_services_by_name(self, service_name):
 		return self.client.containers.list(filters={'label' : 'orch.service.name='+service_name})
