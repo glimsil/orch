@@ -18,4 +18,11 @@ def cli():
 def deploy(service_name, image_name, image_version, port):
     """Simply deploy a docker container."""
 
-    Core().deploy(service_name, image_name, image_version, port)
+    Core().deploy_service(service_name, image_name, image_version, port)
+
+@cli.command()
+@click.option('--service-name', help='Service name', required=True)
+def remove(service_name):
+    """Remove service."""
+
+    Core().remove_service(service_name)

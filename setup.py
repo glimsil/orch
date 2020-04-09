@@ -15,6 +15,7 @@ setup(
     author_email='gusdlim@gmail.com',
     url='https://github.com/glimsil/orch',
     license=license,
+    package_dir={'': 'src'},
     packages=find_packages('src'),
     include_package_data=True,
     install_requires=["click"],
