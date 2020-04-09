@@ -112,11 +112,3 @@ class Core:
 
 	def list_services_by_name(self, service_name):
 		return self.client.containers.list(filters={'label' : 'orch.service.name='+service_name})
-
-
-lst = Core().list_services_by_name('app')
-for c in lst:
-	print ('\n==============')
-	print (c.id)
-	print (c.name)
-	print (c.labels)
