@@ -3,7 +3,7 @@ from src.core import Core
 
 
 @click.group()
-@click.version_option("1.0")
+@click.version_option("0.0.1")
 def cli():
     """
     First version of orch cli.

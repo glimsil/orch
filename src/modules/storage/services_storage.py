@@ -2,8 +2,15 @@ import json
 import os
 from pathlib import Path
 
-class ServicesManager:
+class ServicesStorage:
     SERVICES_FOLDER_PATH = str(Path.home()) +'/.orch/services/'
+
+    def get_services(self):
+        services = []
+        for file in os.listdir(self.SERVICES_FOLDER_PATH):
+            if file.endswith(".json"):
+                services.append(file.split('.')[0])
+        return services
 
     def service_info_exists(self, service_name):
         Path(self.SERVICES_FOLDER_PATH).mkdir(parents=True, exist_ok=True)

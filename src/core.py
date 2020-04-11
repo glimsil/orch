@@ -2,12 +2,12 @@ import docker
 import time
 import os
 import copy
-from src.modules.manager.services_manager import ServicesManager
+from src.modules.storage.services_storage import ServicesStorage
 
 class Core:
 
 	client = docker.from_env()
-	service_manager = ServicesManager()
+	service_storage = ServicesStorage()
 	#
 	# name - string
 	# version - string
@@ -28,7 +28,8 @@ class Core:
 			'type' : 'cpu',
 			'up' : 50,
 			'down' : 10
-		}
+		},
+		'health_uri' : '/'
 	} 
 
 	# TODO:
@@ -48,10 +49,10 @@ class Core:
 			lb_int_port = str(lb_port)+'1'
 			self.create_lb(service_name, lb_port, lb_int_port)
 			print('Service will listen on port ' + str(lb_port) + '. LB interface on port: ' + lb_int_port)
-		if(not self.service_manager.service_info_exists(service_name)):
+		if(not self.service_storage.service_info_exists(service_name)):
 			service_info = self.init_service_info(service_name, image_name, image_version, lb_port)
 		else:
-			service_info = self.service_manager.get_service_info(service_name)
+			service_info = self.service_storage.get_service_info(service_name)
 		self.deploy_scale_service(service_info)
 		
 	def init_service_info(self, service_name, image_name, image_version, lb_port):
@@ -60,7 +61,7 @@ class Core:
 		service_info['image'] = image_name
 		service_info['version'] = image_version
 		service_info['port'] = lb_port
-		return self.service_manager.save_service_info(service_name, service_info)
+		return self.service_storage.save_service_info(service_name, service_info)
 
 	def create_lb(self, service_name, service_port, lb_dashboard_port):
 		lb_image = 'traefik:1.7'
@@ -110,8 +111,8 @@ class Core:
 		self.client.containers.run(image, detach=True, name = name, labels = labels, ports = ports) 
 
 	def scale_service(self, service_name, scale_to):
-		if(self.service_manager.service_info_exists(service_name)):
-			service_info = self.service_manager.get_service_info(service_name)
+		if(self.service_storage.service_info_exists(service_name)):
+			service_info = self.service_storage.get_service_info(service_name)
 		else:
 			print('There is no service info for this service name.')
 			return
@@ -133,8 +134,8 @@ class Core:
 	
 	def scale_service_up(self, service_name, service_info=None):
 		if(service_info == None):
-			if(self.service_manager.service_info_exists(service_name)):
-				service_info = self.service_manager.get_service_info(service_name)
+			if(self.service_storage.service_info_exists(service_name)):
+				service_info = self.service_storage.get_service_info(service_name)
 			else:
 				print('There is no service info for this service name.')
 				return
@@ -148,8 +149,8 @@ class Core:
 
 	def scale_service_down(self, service_name, service_info=None):
 		if(service_info == None):
-			if(self.service_manager.service_info_exists(service_name)):
-				service_info = self.service_manager.get_service_info(service_name)
+			if(self.service_storage.service_info_exists(service_name)):
+				service_info = self.service_storage.get_service_info(service_name)
 			else:
 				print('There is no service info for this service name.')
 				return
@@ -172,7 +173,7 @@ class Core:
 		containers = self.list_services_by_name(service_name)
 		for container in containers:
 			container.remove(force=True)
-		self.service_manager.delete_service_info(service_name)
+		self.service_storage.delete_service_info(service_name)
 
 	def count_services_by_name(self, service_name):
 		containers = self.list_services_by_name(service_name)
