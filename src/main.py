@@ -1,6 +1,6 @@
 import click
 from src.core import Core
-
+from src.manager.main import OrchManager
 
 @click.group()
 @click.version_option("0.0.1")
@@ -51,3 +51,9 @@ def scale_down(service_name):
 def remove(service_name):
     """Remove service."""
     Core().remove_service(service_name)
+
+
+@cli.command()
+def manager_init():
+    """Remove service."""
+    OrchManager().init()

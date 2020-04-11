@@ -7,6 +7,9 @@ from src.core import Core
 
 class HealthCheckRunner(object):
     core = Core()
+
+    INTERNAL_SERVICE_PORT = '80'
+
     def __init__(self, interval=10):
         self.interval = interval
 
@@ -22,7 +25,7 @@ class HealthCheckRunner(object):
                 containers = self.core.list_services_by_name(service_name)
                 for container in containers:
                     ip = container.attrs['NetworkSettings']['IPAddress']
-                    response = requests.get('http://' +str(ip) + ':80')
+                    response = requests.get('http://' + str(ip) + ':' + self.INTERNAL_SERVICE_PORT)
                     if(response.status_code in (200, 201, 202, 203, 204, 205)):
                         print('ok')
                     else:
