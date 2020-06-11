@@ -3,11 +3,14 @@ import time
 import os
 import copy
 from src.modules.storage.services_storage import ServicesStorage
+from src.modules.utils.network_utils import NetworkUtils
 
 class Core:
 
 	client = docker.from_env()
 	service_storage = ServicesStorage()
+	network_utils = NetworkUtils()
+
 	#
 	# name - string
 	# version - string
@@ -46,9 +49,11 @@ class Core:
 		except docker.errors.APIError as err:
 			print("Failed to get lb container: {0}".format(err))
 		if(is_new):
-			lb_int_port = str(lb_port)+'1'
+			if(lb_port is None):
+				lb_port = self.network_utils.get_free_port()
+				lb_int_port = self.network_utils.get_free_port()
 			self.create_lb(service_name, lb_port, lb_int_port)
-			print('Service will listen on port ' + str(lb_port) + '. LB interface on port: ' + lb_int_port)
+			print('Service will listen on port ' + str(lb_port) + '. LB interface on port: ' + str(lb_int_port))
 		if(not self.service_storage.service_info_exists(service_name)):
 			service_info = self.init_service_info(service_name, image_name, image_version, lb_port)
 		else:

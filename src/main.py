@@ -14,7 +14,7 @@ def cli():
 @click.option('--service-name', help='Service name', required=True)
 @click.option('--image-name', help='Image Name', required=True)
 @click.option('--image-version', default='latest', help='Image Version')
-@click.option('--port', default='4000', help='Image Version')
+@click.option('--port', help='Image Version')
 def deploy(service_name, image_name, image_version, port):
     """Simply deploy a docker container."""
 
@@ -55,5 +55,5 @@ def remove(service_name):
 
 @cli.command()
 def manager_init():
-    """Remove service."""
+    """init manager."""
     OrchManager().init()
