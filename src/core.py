@@ -3,12 +3,14 @@ import time
 import os
 import copy
 from src.modules.storage.services_storage import ServicesStorage
+from src.modules.loadbalancer.loadbalancer_storage import LoadBalancerStorage
 from src.modules.utils.network_utils import NetworkUtils
 
 class Core:
 
 	client = docker.from_env()
 	service_storage = ServicesStorage()
+	loadbalancer_storage = LoadBalancerStorage()
 	network_utils = NetworkUtils()
 
 	#
@@ -70,7 +72,8 @@ class Core:
 
 	def create_lb(self, service_name, service_port, lb_dashboard_port):
 		lb_image = 'traefik:1.7'
-		line = 'docker run -d -p {lb_dashboard_port}:8080 -p {service_port}:80 -v $PWD/src/config/traefik.toml:/etc/traefik/traefik.toml -v /var/run/docker.sock:/var/run/docker.sock --name traefik_lb_{service_name} {lb_image}'.replace('{lb_dashboard_port}', str(lb_dashboard_port)).replace('{service_port}', str(service_port)).replace('{service_name}', service_name).replace('{lb_image}', lb_image)
+		self.loadbalancer_storage.create_lb_config(service_name)
+		line = 'docker run -d -p {lb_dashboard_port}:8080 -p {service_port}:80 -v {toml}:/etc/traefik/traefik.toml -v /var/run/docker.sock:/var/run/docker.sock --name traefik_lb_{service_name} {lb_image}'.replace('{lb_dashboard_port}', str(lb_dashboard_port)).replace('{service_port}', str(service_port)).replace('{service_name}', service_name).replace('{lb_image}', lb_image).replace('{toml}', self.loadbalancer_storage.get_traefik_toml_path(service_name))
 		os.system(line)
 
 	def deploy_scale_service(self, service_info):
@@ -81,16 +84,6 @@ class Core:
 			containers_to_scale = len(containers)
 			if(containers_to_scale > service_info['max_replicas']):
 				containers_to_scale = service_info['max_replicas']
-		labels = {
-			'orch.service.name' : service_info['name'], 
-			'traefik.backend': service_info['name'], 
-			'traefik.port' : '80', 
-			'traefik.frontend.rule':'Host:localhost'
-			}
-		ports = {
-			str(service_info['port']) + '/tcp': None
-			}
-
 		# creating new containers
 		for i in range(containers_to_scale):
 			self.deploy_service_instance(service_info)
@@ -104,9 +97,10 @@ class Core:
 		if(service_info['version'] != None):
 			image += ':' + str(service_info['version'])
 		labels = {
-			'orch.service.name' : service_info['name'], 
+			'orch.service.name' : service_info['name'],
+			'traefik.tags' : service_info['name'], 
 			'traefik.backend': service_info['name'], 
-			'traefik.port' : '80', 
+			'traefik.port' : str(80), 
 			'traefik.frontend.rule':'Host:localhost'
 			}
 		ports = {
@@ -179,6 +173,7 @@ class Core:
 		for container in containers:
 			container.remove(force=True)
 		self.service_storage.delete_service_info(service_name)
+		self.loadbalancer_storage.delete_lb_folder(service_name)
 
 	def count_services_by_name(self, service_name):
 		containers = self.list_services_by_name(service_name)
@@ -186,3 +181,7 @@ class Core:
 
 	def list_services_by_name(self, service_name):
 		return self.client.containers.list(filters={'label' : 'orch.service.name='+service_name})
+	
+	def get_container(self, container_name):
+		return self.client.containers.ger(container_name)
+

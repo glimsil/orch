@@ -152,3 +152,4 @@
 # Default: true
 #
 # exposedByDefault = true
+constraints = ["tag=={tag_name}"]
