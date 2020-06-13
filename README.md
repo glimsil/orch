@@ -1,4 +1,5 @@
 # orch
+A lightweight container orchestrator, simple to set up and use.
 
 To install, just type:
 
