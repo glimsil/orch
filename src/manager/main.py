@@ -10,5 +10,5 @@ class OrchManager():
         asRunner = AutoScalingRunner()
         hcRunner = HealthCheckRunner()
         while True:
-            #print('checking runners')
+            print('checking runners')
             time.sleep(30)
