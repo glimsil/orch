@@ -20,3 +20,25 @@ class DockerContainerProvider(ContainerProviderInterface):
     def get_container_cpu_usage(self, identification):
         app_cpu = os.popen('docker stats --no-stream --format "{{.Name}}:{{.CPUPerc}}" | grep ' + identification).read()
         return app_cpu.split(':')[1].split('%')[0]
+    
+    def exists_container(self, identification):
+        exists = False
+        try:
+            self._client.containers.get(identification)
+            exists = True
+        except docker.errors.NotFound:
+            exists = False
+        except docker.errors.APIError as err:
+            print("Failed to get lb container: {0}".format(err))
+        return exists
+    
+    def remove_container(self, identification):
+        try:
+            lb_container = self._client.containers.get(identification)
+            lb_container.remove(force=True)
+            return True
+        except docker.errors.NotFound as err:
+            print("Load Balancer Container not found: {0}".format(err))
+        except docker.errors.APIError as err:
+            print("Failed to get lb container: {0}".format(err))
+        return False

@@ -28,10 +28,7 @@ class HealthCheckRunner(object):
                 for container in containers:
                     ip = container.attrs['NetworkSettings']['IPAddress']
                     response = requests.get('http://' + str(ip) + ':' + self.INTERNAL_SERVICE_PORT)
-                    if(response.status_code in (200, 201, 202, 203, 204, 205)):
-                        #print('ok')
-                        1+1
-                    else:
+                    if(response.status_code not in (200, 201, 202, 203, 204, 205)):
                         containers.remove(force=True)
                         self.core.scale_service_up(service_name)
             time.sleep(self.interval)

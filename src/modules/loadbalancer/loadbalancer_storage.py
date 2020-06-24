@@ -14,8 +14,10 @@ class LoadBalancerStorage:
         return self.SERVICES_FOLDER_PATH+service_name+"/traefik.toml"
 
     def create_lb_config(self, service_name):
+        current_path = os.path.abspath(os.path.dirname(__file__))
+        config_path = os.path.join(current_path, "../../config/traefik.toml")
         Path(self.SERVICES_FOLDER_PATH + service_name).mkdir(parents=True, exist_ok=True)
-        os.system("cp $PWD/src/config/traefik.toml " + self.SERVICES_FOLDER_PATH+service_name+"/traefik.toml")
+        os.system("cp " + str(config_path) + " " + self.SERVICES_FOLDER_PATH+service_name+"/traefik.toml")
         os.system("sed -i 's/{tag_name}/"+service_name+"/g' " + self.SERVICES_FOLDER_PATH+service_name+"/traefik.toml")
     
     def delete_lb_folder(self, service_name):
