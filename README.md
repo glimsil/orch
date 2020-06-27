@@ -5,6 +5,9 @@ To install, just type:
 
     pip3 install .
 
+Start the orch api typing:
+    python3 src/api.py
+
 To run, type:
     orch --help
 

@@ -7,7 +7,7 @@ from src.providers.container.container_provider_handler import ContainerProvider
 
 class AutoScalingRunner(object):
     _TAG = '[AutoScalingRunner]'
-    core  = Core()
+    core = Core()
     _container_provider = None
     def __init__(self, interval=5):
         self._container_provider = ContainerProviderHandler().get_provider()

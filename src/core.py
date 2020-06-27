@@ -8,8 +8,6 @@ from src.modules.utils.network_utils import NetworkUtils
 from src.providers.container.container_provider_handler import ContainerProviderHandler
 
 class Core:
-
-    client = docker.from_env()
     _container_provider = None
     service_storage = ServicesStorage()
     loadbalancer_storage = LoadBalancerStorage()
@@ -48,7 +46,7 @@ class Core:
 
     def deploy_service(self, service_name, image_name, image_version, lb_port, **kwargs):
         is_new = not self._container_provider.exists_container('traefik_lb_{service_name}'.replace('{service_name}', service_name))
-        if(is_new):
+        if(is_new): 
             if(lb_port is None):
                 lb_port = self.network_utils.get_free_port()
                 lb_int_port = self.network_utils.get_free_port()
@@ -64,7 +62,6 @@ class Core:
         service_name = service_info['name']
         #image_name =  service_info['image']
         #image_version =  service_info['version']
-        lb_port = service_info.get("port", None)
         lb_int_port = None
         is_new = not self._container_provider.exists_container('traefik_lb_{service_name}'.replace('{service_name}', service_name))
         recreate_lb = False
@@ -72,6 +69,9 @@ class Core:
             old_service_info = self.service_storage.get_service_info(service_name)
             comparison = self.compare_service_info(service_info, old_service_info)
             recreate_lb = not comparison['loadbalancer']
+            service_info = self.merge_service_info(service_info, old_service_info)
+        lb_port = service_info.get("port", None)
+        lb_int_port = None
         if(is_new):
             if(lb_port is None):
                 lb_port = self.network_utils.get_free_port()
@@ -100,6 +100,24 @@ class Core:
         service_info['port'] = lb_port
         return self.service_storage.save_service_info(service_name, service_info)
 
+    def merge_service_info(self, new_service_info, old_service_info):
+        if('port' in new_service_info):
+            old_service_info['port'] = new_service_info['port']
+        if('image' in new_service_info):
+            old_service_info['image'] = new_service_info['image']
+        if('version' in new_service_info):
+            old_service_info['version'] = new_service_info['version']
+        if('min_replicas' in new_service_info):
+            old_service_info['min_replicas'] = new_service_info['min_replicas']
+        if('max_replicas' in new_service_info):
+            old_service_info['max_replicas'] = new_service_info['max_replicas']
+        if('autoscale' in new_service_info):
+            old_service_info['autoscale'] = new_service_info['autoscale']
+        if('autoscale_strategy' in new_service_info):
+            old_service_info['autoscale_strategy'] = new_service_info['autoscale_strategy']
+        if('health_uri' in new_service_info):
+            old_service_info['health_uri'] = new_service_info['health_uri']
+        return old_service_info
     # 
     def compare_service_info(self, new_service_info, old_service_info):
         comparison = {
@@ -108,17 +126,19 @@ class Core:
         }
         if(new_service_info['name'] != old_service_info['name']):
             return comparison
-        if(new_service_info['port'] == old_service_info['port']):
+        if('port' in new_service_info and new_service_info['port'] == old_service_info['port']):
             comparison['loadbalancer'] = True
         if(new_service_info['image'] == old_service_info['image'] and new_service_info['version'] == old_service_info['version'] and new_service_info['health_uri'] == old_service_info['health_uri']):
             comparison['loadbalancer'] = True
         return comparison
 
     def create_lb(self, service_name, service_port, lb_dashboard_port):
-        lb_image = 'traefik:1.7'
         self.loadbalancer_storage.create_lb_config(service_name)
-        line = 'docker run -d -p {lb_dashboard_port}:8080 -p {service_port}:80 -v {toml}:/etc/traefik/traefik.toml -v /var/run/docker.sock:/var/run/docker.sock --name traefik_lb_{service_name} {lb_image}'.replace('{lb_dashboard_port}', str(lb_dashboard_port)).replace('{service_port}', str(service_port)).replace('{service_name}', service_name).replace('{lb_image}', lb_image).replace('{toml}', self.loadbalancer_storage.get_traefik_toml_path(service_name))
-        os.system(line)
+        try:
+            self._container_provider.create_lb(service_name, service_port, lb_dashboard_port, self.loadbalancer_storage.get_traefik_toml_path(service_name))
+        except Exception as e:
+            print(e)
+            self.loadbalancer_storage.delete_lb_folder(service_name)
 
     def deploy_scale_service(self, service_info):
         containers = self.list_services_by_name(service_info['name'])
@@ -151,7 +171,7 @@ class Core:
             str(service_info['port']) + '/tcp': None
             }
         name = service_info['name'] + '_' + str(round(time.time() * 1000))
-        self.client.containers.run(image, detach=True, name = name, labels = labels, ports = ports) 
+        self._container_provider.run_container(image, detach=True, name = name, labels = labels, ports = ports) 
 
     def scale_service(self, service_name, scale_to):
         if(self.service_storage.service_info_exists(service_name)):

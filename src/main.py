@@ -1,5 +1,7 @@
 import click
-from src.core import Core
+import requests
+import json
+from src.client import OrchClient
 from src.manager.main import OrchManager
 
 @click.group()
@@ -9,49 +11,49 @@ def cli():
     First version of orch cli.
     """
 
-
 @cli.command()
-@click.option('--service-name', help='Service name', required=True)
-@click.option('--image-name', help='Image Name', required=True)
-@click.option('--image-version', default='latest', help='Image Version')
-@click.option('--port', help='Image Version')
-def deploy(service_name, image_name, image_version, port):
+@click.option('--service-info-file', help='Path to service info json file', required=False)
+@click.option('--service-info-raw', help='Raw service info', required=False)
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
+def deploy(service_info_file, service_info_raw, host_file):
     """Simply deploy a docker container."""
-
-    Core().deploy_service(service_name, image_name, image_version, port)
-
-
+    OrchClient(host_file).deploy_service(service_info_file, service_info_raw)
+    
 @cli.command()
 @click.option('--service-name', help='Service name', required=True)
-def replicas_count(service_name):
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
+def get_service(service_name, host_file):
     """Retrieve the number of replicas of the service."""
-    print(Core().count_services_by_name(service_name))
+    OrchClient(host_file).get_service(service_name)
 
 @cli.command()
 @click.option('--service-name', help='Service name', required=True)
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
 @click.argument('scale_to')
-def scale(service_name, scale_to):
+def scale(service_name, host_file, scale_to):
     """Scale service to a specific number of replicas."""
-    Core().scale_service(service_name, int(scale_to))
+    OrchClient(host_file).scale(service_name, scale_to)
 
 @cli.command()
 @click.option('--service-name', help='Service name', required=True)
-def scale_up(service_name):
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
+def scale_up(service_name, host_file):
     """Adds one replica to the service cluster."""
-    Core().scale_service_up(service_name)
+    OrchClient(host_file).scale_up(service_name)
 
 @cli.command()
 @click.option('--service-name', help='Service name', required=True)
-def scale_down(service_name):
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
+def scale_down(service_name, host_file):
     """Remove one replica from the service cluster."""
-    Core().scale_service_down(service_name)
+    OrchClient(host_file).scale_down(service_name)
 
 @cli.command()
 @click.option('--service-name', help='Service name', required=True)
-def remove(service_name):
+@click.option('--host-file', help='Host file path. If not informed, the default will be used.', required=False)
+def remove(service_name, host_file):
     """Remove service."""
-    Core().remove_service(service_name)
-
+    OrchClient(host_file).remove_service(service_name)
 
 @cli.command()
 def manager_init():
