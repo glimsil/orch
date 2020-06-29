@@ -171,7 +171,8 @@ class Core:
             str(service_info['port']) + '/tcp': None
             }
         name = service_info['name'] + '_' + str(round(time.time() * 1000))
-        self._container_provider.run_container(image, detach=True, name = name, labels = labels, ports = ports) 
+        limits = service_info.get('limits', {})
+        self._container_provider.run_container(image, detach=True, name = name, labels = labels, ports = ports, mem_limit=limits.get('mem_limit', None), memswap_limit=limits.get('memswap_limit', None), cpus=limits.get('cpus', None)) 
 
     def scale_service(self, service_name, scale_to):
         if(self.service_storage.service_info_exists(service_name)):

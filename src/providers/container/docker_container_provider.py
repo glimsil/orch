@@ -6,6 +6,8 @@ class DockerContainerProvider(ContainerProviderInterface):
 
     _client = docker.from_env()
 
+    CPU_MULTIPLICATOR = 1000000000
+
     def list_containers(self, params):
         if(params is None):
             return self._client.containers.list()
@@ -14,8 +16,13 @@ class DockerContainerProvider(ContainerProviderInterface):
     def get_container(self, params):
         return self._client.containers.get(params['container_name'])
 
-    def run_container(self, image, detach=None, name=None, labels=None, ports=None):
-        return self._client.containers.run(image, detach=detach, name=name, labels=labels, ports = ports) 
+    def run_container(self, image, detach=None, name=None, labels=None, ports=None, mem_limit=None, memswap_limit=None, cpus=None):
+        if(mem_limit is not None and memswap_limit is None):
+            memswap_limit = mem_limit
+        if(cpus is not None):
+            cpus = int(self.CPU_MULTIPLICATOR * float(cpus))
+        print(cpus)
+        return self._client.containers.run(image, detach=detach, name=name, labels=labels, ports = ports, mem_limit = mem_limit, memswap_limit=memswap_limit, nano_cpus=cpus) 
 
     def get_container_cpu_usage(self, identification):
         app_cpu = os.popen('docker stats --no-stream --format "{{.Name}}:{{.CPUPerc}}" | grep ' + identification).read()

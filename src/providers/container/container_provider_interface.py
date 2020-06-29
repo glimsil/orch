@@ -11,7 +11,7 @@ class ContainerProviderInterface(metaclass=abc.ABCMeta):
         return
     
     @abc.abstractmethod
-    def run_container(self, image, detach=None, name=None, labels=None, ports=None):
+    def run_container(self, image, detach=None, name=None, labels=None, ports=None, mem_limit=None, memswap_limit=None, cpus=None):
         return
     
     @abc.abstractmethod

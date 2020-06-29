@@ -26,7 +26,7 @@ def service_get_deployment(name):
 
 @api.route('/v1/service/<name>/scale/<replicas>', methods=['POST'])
 def service_scale(name, replicas):
-    return jsonify(core.scale_service(name, replicas))
+    return jsonify(core.scale_service(name, int(replicas)))
 
 @api.route('/v1/service/<name>/scale-up', methods=['POST'])
 def service_scale_up(name):
