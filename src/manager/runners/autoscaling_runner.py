@@ -2,8 +2,8 @@ import time
 import datetime
 import threading
 import os
-from src.core import Core
-from src.providers.container.container_provider_handler import ContainerProviderHandler
+from core import Core
+from providers.container.container_provider_handler import ContainerProviderHandler
 
 class AutoScalingRunner(object):
     _TAG = '[AutoScalingRunner]'

@@ -21,7 +21,7 @@ setup(
     install_requires=["click"],
     entry_points={
         'console_scripts': [ 
-        'orch=src.main:cli' 
+        'orch=main:cli' 
         ] 
     }
 )

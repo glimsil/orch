@@ -1,6 +1,6 @@
 import docker
 import os
-from src.providers.container.container_provider_interface import ContainerProviderInterface
+from providers.container.container_provider_interface import ContainerProviderInterface
 
 class DockerContainerProvider(ContainerProviderInterface):
 

@@ -2,10 +2,10 @@ import docker
 import time
 import os
 import copy
-from src.modules.storage.services_storage import ServicesStorage
-from src.modules.loadbalancer.loadbalancer_storage import LoadBalancerStorage
-from src.modules.utils.network_utils import NetworkUtils
-from src.providers.container.container_provider_handler import ContainerProviderHandler
+from modules.storage.services_storage import ServicesStorage
+from modules.loadbalancer.loadbalancer_storage import LoadBalancerStorage
+from modules.utils.network_utils import NetworkUtils
+from providers.container.container_provider_handler import ContainerProviderHandler
 
 class Core:
     _container_provider = None

@@ -1,5 +1,5 @@
 from flask import jsonify
-from src.api import api
+from api import api
 import socket
 
 @api.route('/v1/node/who/i/am', methods=['GET'])

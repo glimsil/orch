@@ -1,4 +1,4 @@
-from src.providers.container.docker_container_provider import DockerContainerProvider
+from providers.container.docker_container_provider import DockerContainerProvider
 
 class ContainerProviderHandler():
     _container_provider = None

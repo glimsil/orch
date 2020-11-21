@@ -1,8 +1,8 @@
 import click
 import requests
 import json
-from src.client import OrchClient
-from src.manager.main import OrchManager
+from client import OrchClient
+from manager.main import OrchManager
 
 @click.group()
 @click.version_option("0.0.1")

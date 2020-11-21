@@ -3,7 +3,7 @@ import datetime
 import threading
 import os
 import requests
-from src.core import Core
+from core import Core
 
 class HealthCheckRunner(object):
     _TAG = '[HealthCheckRunner]'

@@ -1,6 +1,6 @@
 import requests
 import json
-from src.modules.storage.host_storage import HostStorage
+from modules.storage.host_storage import HostStorage
 
 class OrchClient():
     _host_storage = HostStorage()

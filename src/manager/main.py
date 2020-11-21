@@ -1,6 +1,6 @@
 import time
-from src.manager.runners.autoscaling_runner import AutoScalingRunner
-from src.manager.runners.healthcheck_runner import HealthCheckRunner
+from manager.runners.autoscaling_runner import AutoScalingRunner
+from manager.runners.healthcheck_runner import HealthCheckRunner
 
 import sys
 import time

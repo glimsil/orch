@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from src.api import api, core
+from api import api, core
 
 @api.route('/v1/service/deploy', methods=['POST'])
 def service_deploy():
